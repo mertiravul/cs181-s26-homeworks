@@ -10,3 +10,9 @@
 *.run.xml
 *.synctex.gz
 *.toc
+
+# Python virtual environments
+.venv/
+venv/
+.env/
+.env*/

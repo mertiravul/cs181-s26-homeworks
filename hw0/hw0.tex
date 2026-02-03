@@ -39,6 +39,7 @@
 %% Solution environment
 \usepackage{xcolor}
 \usepackage{comment}
+\usepackage{indentfirst}
 \newenvironment{solution}
   {\color{blue}\section*{Solution}}
 {}
@@ -83,7 +84,40 @@ In this class, we will be exploring the question of ``how do we model the trend 
 
 
 \begin{solution}
-	Your solution here.
+
+\textbf{(1)} We have the system of linear equations:
+\begin{align*}
+y_1 &= w_0 + w_1 x_1 \\
+y_2 &= w_0 + w_1 x_2
+\end{align*}
+From the first equation, $w_0 = y_1 - w_1 x_1$. Substituting into the second gives us
+$y_2 = (y_1 - w_1 x_1) + w_1 x_2 = y_1 + w_1(x_2 - x_1)$. Thus, $w_1(x_2 - x_1) = y_2 - y_1$, and assuming $x_1 \neq x_2$:
+
+\[
+w_1 = \frac{y_2 - y_1}{x_2 - x_1}, \qquad w_0 = y_1 - w_1 x_1 = y_1 - \frac{y_2 - y_1}{x_2 - x_1} x_1 = \frac{y_1 x_2 - y_2 x_1}{x_2 - x_1}.
+\]
+
+\textbf{(2)} We can write the same system in matrix form as $y = Xw$ with:
+\begin{equation*}
+y = \begin{bmatrix} y_1 \\ y_2 \end{bmatrix}, \qquad
+X = \begin{bmatrix} 1 & x_1 \\ 1 & x_2 \end{bmatrix}, \qquad
+w = \begin{bmatrix} w_0 \\ w_1 \end{bmatrix}.
+\end{equation*}
+
+\textbf{(3)} A unique solution for $w$ exists if and only if $X$ is invertible. For a $2\times 2$ matrix, this is equivalent to a nonzero determinant: $\det(X) = x_2 - x_1$, so we need $x_1 \neq x_2$. When the solution exists and is unique, we have:
+\[
+w = X^{-1} y.
+\]
+
+\textbf{(4)} The inverse of $X$ is $X^{-1} = \frac{1}{x_2 - x_1} \begin{bmatrix} x_2 & -x_1 \\ -1 & 1 \end{bmatrix}$. So
+\[
+w = X^{-1}y = \frac{1}{x_2 - x_1} \begin{bmatrix} x_2 y_1 - x_1 y_2 \\ y_2 - y_1 \end{bmatrix} = \begin{bmatrix} \frac{y_1 x_2 - y_2 x_1}{x_2 - x_1} \\ \frac{y_2 - y_1}{x_2 - x_1} \end{bmatrix},
+\]
+which matches our solution in (1). One advantage of the matrix formulation is that it generalizes cleanly to more variables and makes conditions for uniqueness (invertibility of $X$) explicit.
+
+\textbf{(5)} It doesn't. With $n > 2$ points, we have $n$ equations in 2 unknowns, so $X$ is $n \times 2$. This means that $X^{-1}$ does not exist, and the expression $w = X^{-1}y$ does not apply.
+
+\textbf{(6)} Solution is in \texttt{hw0.ipynb}.
 \end{solution}
 
 \color{black}
@@ -118,7 +152,14 @@ $$y = f(x_1, x_2) = \exp\left(-(x_1 - 2)^2 - (x_2 - 1)^2 \right)$$
 
 
 \begin{solution}
-	Your solution here.
+\textbf{(1)} The plot of $y = -3x^2 + 72x + 70$ is a parabola opening downward as we see in see \texttt{hw0.ipynb}. There is exactly one maximum plant height so the maximum exists and is unique. We see in the function that the leading term is $-3x^2$ with negative coefficient, so $y$ is a concave down quadratic. Such a function has a unique global maximum.
+
+\textbf{(2)} We need to set the derivative to zero: $\frac{dy}{dx} = -6x + 72 = 0$ gives $x = 12$ oz of water per week. The second derivative is $\frac{d^2 y}{dx^2} = -6 < 0$, so this is a maximum. We can calculate the maximum height as:
+\[
+f(12) = -3(12)^2 + 72(12) + 70 = -432 + 864 + 70 = 502 \text{ mm}.
+\]
+
+\textbf{(3)} The 3D plot is in \texttt{hw0.ipynb}. The exponent of the function, $-(x_1-2)^2 - (x_2-1)^2$, is always less than or equal to zero, and equals zero only at $(x_1, x_2) = (2, 1)$. Since $\exp$ is an increasing function, $f$ is maximized exactly at $(x_1, x_2) = (2, 1)$, with $f(2, 1) = 1$. For the same reason, this is the global maximum.
 \end{solution}
 
 \newpage 
@@ -164,7 +205,29 @@ In this class, one of our main focuses is to model the unexpected variations in 
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{(1)(a)} The Gaussian distribution has support $(-\infty, \infty)$, so it assigns positive probability to negative size or negative weight. A distribution with positive support may be more appropriate.
+
+\textbf{(1)(b)} We sample 500 times from the bivariate normal with $\mu = (120, 4)^T$ and $\Sigma$ in \texttt{hw0.ipynb}. The empirical mean $(120.05, 3.96)$ is close to the theoretical mean $(120, 4)$ as we see in the plot.
+
+\textbf{(2)} As we see in \texttt{hw0.ipynb}, when $S = 118$, the conditional distribution of $W$ is shifted left relative to when $S = 122$. So lower $S$ tends to go with lower $W$, which means they are positively correlated.
+
+\textbf{(3)} By linearity of expectation:
+\[
+\mathbb{E}[T] = 60 + 0.6\,\mathbb{E}[W] + 0.2\,\mathbb{E}[S] + \mathbb{E}[\epsilon] = 60 + 0.6(4) + 0.2(120) + 0 = 86.4 \text{ seconds}.
+\]
+Using $\mathrm{Var}(W)=\mathrm{Var}(S)=1.5$, $\mathrm{Cov}(W,S)=1$, and $\mathrm{Var}(\epsilon)=5$ with $\epsilon$ independent of $(W,S)$:
+\[
+\mathrm{Var}(T) = \mathrm{Var}(0.6W + 0.2S + \epsilon) = (0.6)^2(1.5) + (0.2)^2(1.5) + 2(0.6)(0.2)(1) + 5 = 0.54 + 0.06 + 0.24 + 5 = 5.84.
+\]
+
+\textbf{(4)} Conditional on $N = n$, each package is fragile independently with probability $p = P(W < 4)$. $W$ is $\mathcal{N}(4, 1.5)$, so $p = P(W < 4) = \Phi(0) = 1/2$. The number of fragile packages is the number of successes in $n$ independent Bernoulli$(1/2)$ trials, so it is Binomial$(n, 1/2)$ with PMF:
+\[
+P(X = k) = \binom{n}{k} \left(\frac{1}{2}\right)^n, \quad k = 0, 1, \ldots, n.
+\]
+
+\textbf{(5)(a)} See \texttt{hw0.ipynb}.
+
+\textbf{(5)(b)} See \texttt{hw0.ipynb}.
 \end{solution} 
 
 \newpage 
@@ -200,7 +263,22 @@ In this class, we will bridge theory and practice through implementing the metho
 \end{problem}
 
 \begin{solution}
-	Your solution here.
+\textbf{(1)} Steve's code did not take into account that the data matrix \texttt{data} has shape $(n, 2)$. After fixing and plotting on \texttt{hw0.ipynb}, we see that the scatter plot shows an upward linear trend.
+
+\textbf{(2)} To get a design matrix with shape $(n, 2)$, we need each column to be $(n \times 1)$ before stacking. After fixing, we see that \texttt{y.shape} is $(100,)$ and \texttt{X.shape} is $(100, 2)$. There is no second coordinate in \texttt{y.shape} because $\mathbf{y}$ is stored as a 1D array of $n$ response values.
+
+\textbf{(3)} $\mathbf{X}$ has shape $(n, 2)$ and $\mathbf{y}$ has shape $(n,)$. So, $\mathbf{X}^T\mathbf{X}$ is $(2 \times 2)$, and $(\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y}$ is $(2 \times n)(n \times 1) = (2 \times 1)$ in matrix form, or a 1D array of length 2 in NumPy. Thus, the shape of $\hat{\mathbf{w}}$ should be \texttt{(2,)}.
+
+\textbf{(4)} In Steve's code, \texttt{fit} didn't use matrix multiplication and \texttt{np.linalg.inv}. We should also assign to \texttt{self.w} and return \texttt{self} (or nothing), not return the expression. The other function \texttt{predict} was missing \texttt{self} as the first argument and used \texttt{w} instead of \texttt{self.w}. After these fixes, the fitted line is below:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{img_output/hw0_p4_4.png}
+    \caption{Fitted Line}
+    \label{fig:fitted-line}
+\end{figure}
+
+\textbf{(5)} The vectorized MSE is $\frac{1}{n} \|\mathbf{y} - \hat{\mathbf{y}}\|^2 = \frac{1}{n}(\mathbf{y} - \hat{\mathbf{y}})^T(\mathbf{y} - \hat{\mathbf{y}})$. This is implemented in \texttt{hw0.ipynb}.
 \end{solution}
 
 \end{document}
