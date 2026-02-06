@@ -190,7 +190,7 @@ dictates how quickly the kernel decays).
 % Problem 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{problem}[Geometric Least Squares, 20pts]
-    Linear regression can be understood using geometric intuition in $\mathbb{R}^n$. The design matrix $\mathbf X \in \mathbb{R}^{N\times D}$ spans a subspace $C(\mathbf X)$, the column space of $\mathbf X$ (referred to in lecture as column span) which is a subspace of $\mathbb{R}^N$. If you wish to review the concept of a column space, consider visiting Section 0 notes. \\
+    Linear regression can be understood using geometric intuition in $\mathbb{R}^n$. The design matrix $\mathbf X \in \mathbb{R}^{N\times D}$, with $N > D$, spans a subspace $C(\mathbf X)$, the column space of $\mathbf X$ (referred to in lecture as column span) which is a subspace of $\mathbb{R}^N$. If you wish to review the concept of a column space, consider visiting Section 0 notes. \\
     
     \noindent Fitting by linear regression, sometimes called \textit{ordinary least-squares} (OLS), is just projecting the observation vector $\mathbf y \in \mathbb{R}^N$ orthogonally onto that subspace. Lecture 2 slides provide a good graphic to visualize this, see the slide titled ``Geometric Interpretation.'' From lecture, we also learned that $\hat {\mathbf y}$ lives in $C(\mathbf X)$ and the residual $\mathbf r = {\mathbf y} - \hat {\mathbf y}$ lives in the orthogonal complement.
 
