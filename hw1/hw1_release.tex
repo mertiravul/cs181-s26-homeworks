@@ -8,6 +8,7 @@
 \usepackage[OT1]{fontenc}
 \usepackage[colorlinks,citecolor=blue,urlcolor=blue]{hyperref}
 \usepackage{graphicx}
+\graphicspath{{./}{hw1/}}
 \usepackage{caption}
 \usepackage{enumitem}
 \usepackage{soul}
@@ -180,7 +181,46 @@ dictates how quickly the kernel decays).
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{1(a)} The fits change as follows:
+\begin{itemize}
+    \item $k=1$: The predictor interpolates the training data exactly, passing through each point. The fit is very wiggly and sensitive to noise.
+    \item $k=3$: The fit is smoother, averaging over 3 nearest neighbors. It captures local trends while reducing noise.
+    \item $k=N-1$: The predictor averages almost all training points, yielding a nearly constant fit close to the mean of the training targets.
+\end{itemize}
+
+\begin{center}
+\includegraphics[width=0.8\textwidth]{img_output/p1.1a.png}
+\end{center}
+
+\textbf{1(b)} The test MSEs for each value of $k$ are:
+\begin{itemize}
+    \item $k=1$: 1.74
+    \item $k=3$: 3.89
+    \item $k=N-1$: 9.53
+\end{itemize}
+The solution with the lowest MSE is $k=1$.
+
+\textbf{2(a)} As $\tau$ increases:
+\begin{itemize}
+    \item Small $\tau$ ($\tau=1$): The kernel decays quickly; predictions are highly local, tracking nearby points closely. The fit can be wiggly.
+    \item Medium $\tau$ ($\tau=50$): A balance between local and global; smoother fit.
+    \item Large $\tau$ ($\tau=2500$): The kernel is nearly flat; all training points contribute similarly. The fit approaches a constant (weighted average of targets).
+\end{itemize}
+
+\begin{center}
+\includegraphics[width=0.8\textwidth]{img_output/p1.2a.png}
+\end{center}
+
+\textbf{2(b)} The MSE of $f_\tau$ over the test set is:
+\[
+\mathrm{MSE} = \frac{1}{M} \sum_{m=1}^{M} \left( y'_m - \frac{\sum_{n=1}^{N} K_\tau(x_n, x'_m) y_n}{\sum_{n=1}^{N} K_\tau(x_n, x'_m)} \right)^2
+\]
+
+\textbf{2(c)} The test MSEs for $\tau$ are: $\tau=1$: 1.95, $\tau=50$: 1.86, $\tau=2500$: 8.33. The model with $\tau=50$ yields the lowest MSE. Conceptually, $\tau=50$ balances bias and variance: too small $\tau$ overfits (high variance), too large underfits (high bias). Choosing $\tau$ based on $\mathcal{D}_\texttt{train}$ would be bad because it uses test information (data leakage) and leads to overly optimistic estimates.
+
+\textbf{2(d)} \textbf{Time complexity}: Both require $O(N)$ operations per prediction (computing distances/kernels to all $N$ training points). \textbf{Space complexity}: Both store the full training set, so $O(N)$. \textbf{Model size}: Grows linearly with $N$ for both. \textbf{Prediction cost}: Grows linearly with $N$ for both.
+
+\textbf{2(e)} As $\tau \to 0$, $K_\tau(x_n, x^*) \to 0$ for all $x_n \neq x^*$, and $K_\tau(x^*, x^*) = 1$ if $x^*$ equals some training point. In the limit, only the nearest training point(s) contribute. If $x^*$ has a unique nearest neighbor $x_n$, then $\lim_{\tau \to 0} f_\tau(x^*) = y_n$. If there are ties, the limit is the average of the $y$-values at the tied nearest points.
 \end{solution}
 
 \newpage
@@ -225,7 +265,35 @@ dictates how quickly the kernel decays).
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{1} We show $\hat{y} \in C(X)$ and $y - \hat{y} \perp C(X)$.
+
+First, $\hat{y} = X w^*$ is a linear combination of the columns of $X$, so $\hat{y} \in C(X)$.
+
+For orthogonality: the OLS loss is $\mathcal{L}(w) = \frac{1}{2}\|y - Xw\|_2^2$. At the minimizer $w^*$, the gradient vanishes:
+\[
+\nabla_{w} \mathcal{L} = -X^\top(y - Xw^*) = -X^\top(y - \hat{y}) = 0.
+\]
+Thus $X^\top(y - \hat{y}) = 0$. For any $v \in C(X)$, we have $v = X a$ for some $a$. Hence
+\[
+(y - \hat{y})^\top v = (y - \hat{y})^\top X a = a^\top X^\top(y - \hat{y}) = 0.
+\]
+So $y - \hat{y}$ is orthogonal to every vector in $C(X)$.
+
+\textbf{2} For any $v \in C(X)$, write $v = \hat{y} + u$ where $u \in C(X)$ (since $C(X)$ is a subspace). Then $y - v = (y - \hat{y}) - u$. We have $y - \hat{y} \perp u$ (both in appropriate spaces; $u \in C(X)$ and $y - \hat{y} \perp C(X)$). By the Pythagorean theorem:
+\[
+\|y - v\|_2^2 = \|y - \hat{y}\|_2^2 + \|u\|_2^2 \geq \|y - \hat{y}\|_2^2.
+\]
+Equality holds iff $u = 0$, i.e., $v = \hat{y}$. So $\hat{y}$ minimizes the distance.
+
+\textbf{3} Let $P = X(X^\top X)^{-1}X^\top$.
+
+\textit{Symmetry}: $P^\top = X(X^\top X)^{-1}X^\top = P$ (since $(X^\top X)^{-1}$ is symmetric).
+
+\textit{Idempotence}: $P^2 = X(X^\top X)^{-1}X^\top X(X^\top X)^{-1}X^\top = X(X^\top X)^{-1}X^\top = P$.
+
+\textit{Rank and trace}: $P$ projects onto $C(X)$, which has dimension $d$. So $\mathrm{rank}(P) = d$. For idempotent matrices, $\mathrm{rank}(P) = \mathrm{trace}(P)$, so $\mathrm{trace}(P) = d$.
+
+\textbf{4} A parabolic (U-shaped) residual plot indicates that the true relationship has curvature (e.g., quadratic) that is not captured by the column space of $X$. The OLS fit projects $y$ onto $C(X)$; the residual $y - \hat{y}$ is the component of $y$ orthogonal to $C(X)$. When the true function is curved, this residual varies systematically with $x$ (e.g., positive for small and large $x$, negative in the middle), producing the U-shape. Adding a quadratic basis function expands $C(X)$ to include vectors that span quadratic behavior. The projection can then capture the curvature, and the residuals become more randomly scattered around zero.
 \end{solution}
 
 \newpage
@@ -282,7 +350,19 @@ dictates how quickly the kernel decays).
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{1} The four plots are included below (from \texttt{p3.1.png}):
+
+\begin{center}
+\includegraphics[width=0.9\textwidth]{img_output/p3.1.png}
+\end{center}
+
+\textbf{2} The test MSEs for each basis are: (a) 7.96, (b) 8.71, (c) 5.97, (d) 58.92. Basis (c) has the lowest MSE. Basis (d) shows clear overfitting: it has 50 features and fits the training data very closely but generalizes poorly (MSE 58.92). Bases (a) and (b) may underfit: they have limited flexibility and higher MSE than (c). Basis (c) with 9 Fourier terms strikes a good balance.
+
+\textbf{3} The basis transforms $\phi$ map the raw input $x$ into a higher-dimensional feature space. This allows the linear model $w^\top\phi(x)$ to capture nonlinear relationships while remaining linear in the weights, so we retain the analytic OLS solution. Different bases (polynomial, Gaussian, Fourier) provide different inductive biases for the underlying function.
+
+\textbf{4} \textbf{Storage:} After training, we store only $w \in \mathbb{R}^D$, so $O(D)$---independent of $N$. \textbf{Prediction}: Computing $w^\top\phi(x^*)$ is $O(D)$, independent of $N$. In contrast, kNN and kernel regression store all $N$ training points ($O(N)$) and require $O(N)$ work per prediction. Linear regression is much more efficient at test time when $D \ll N$.
+
+\textbf{5} No single regression is universally best. kNN and kernel regression are nonparametric and flexible but scale with $N$, linear regression with bases is parametric and efficient. On this dataset, kernel regression ($\tau=50$) and basis (c) perform well. In practice, one would use cross-validation to select among models and hyperparameters. Having multiple regressors allows ensemble methods or model selection based on validation performance.
 \end{solution}
 
 \newpage
@@ -338,7 +418,36 @@ dictates how quickly the kernel decays).
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{1} With $w \sim \mathcal{N}(0, \frac{\sigma^2}{\lambda}I)$, the prior is $p(w) \propto \exp\left(-\frac{\lambda}{2\sigma^2}\|w\|_2^2\right)$. The likelihood is $p(y|w,X) \propto \exp\left(-\frac{1}{2\sigma^2}\|y - Xw\|_2^2\right)$. The posterior (up to constants) is:
+\[
+p(w|X,y) \propto p(y|w,X) p(w) \propto \exp\left(-\frac{1}{2\sigma^2}\|y - Xw\|_2^2 - \frac{\lambda}{2\sigma^2}\|w\|_2^2\right).
+\]
+Maximizing the posterior is equivalent to minimizing the negative log-posterior:
+\[
+\frac{1}{2\sigma^2}\|y - Xw\|_2^2 + \frac{\lambda}{2\sigma^2}\|w\|_2^2.
+\]
+Since $\sigma^2$ is constant, this is equivalent to minimizing $\mathcal{L}_{ridge}(w) = \frac{1}{2}\|y - Xw\|_2^2 + \frac{\lambda}{2}\|w\|_2^2$.
+
+\textbf{2} Setting $\nabla_{w} \mathcal{L}_{ridge} = -X^\top(y - Xw) + \lambda w = 0$:
+\[
+X^\top Xw + \lambda w = X^\top y \quad \Rightarrow \quad (X^\top X + \lambda I)w = X^\top y.
+\]
+Thus $w^* = (X^\top X + \lambda I)^{-1}X^\top y$.
+
+\textbf{3} For $w_d \sim L(0, \frac{2\sigma^2}{\lambda})$, the prior PDF is $p(w_d) = \frac{\lambda}{4\sigma^2} \exp\left(-\frac{\lambda|w_d|}{2\sigma^2}\right)$. So $p(w) \propto \exp\left(-\frac{\lambda}{2\sigma^2}\|w\|_1\right)$. The posterior is:
+\[
+p(w|X,y) \propto \exp\left(-\frac{1}{2\sigma^2}\|y - Xw\|_2^2 - \frac{\lambda}{2\sigma^2}\|w\|_1\right).
+\]
+Maximizing is equivalent to minimizing $\mathcal{L}_{lasso}(w) = \frac{1}{2}\|y - Xw\|_2^2 + \frac{\lambda}{2}\|w\|_1$.
+
+\textbf{4} The LASSO objective includes the $\ell_1$ norm $\|w\|_1$, which is non-differentiable at $w_d = 0$ for any coordinate $d$. There is no closed-form solution like ridge regression because setting the gradient to zero does not yield a well-defined system; the subgradient conditions lead to piecewise solutions (soft-thresholding) that depend on the data in a non-linear way.
+
+\textbf{5} The test MSEs are: $\lambda=1$: 30.06, $\lambda=10$: 15.62. The unregularized basis (d) model had test MSE 58.92. Both LASSO models improve over the unregularized (d): stronger regularization ($\lambda=10$) yields a smoother fit and lower test MSE than $\lambda=1$. The graphs show that LASSO produces smoother curves than the unregularized (d) model, which was severely overfitting. Regularization reduces overfitting by shrinking weights toward zero.
+
+\begin{center}
+  \includegraphics[width=0.7\textwidth]{img_output/p4.5.png}
+\end{center}
+
 \end{solution}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -346,7 +455,7 @@ dictates how quickly the kernel decays).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 
-\textbf{Name}:
+\textbf{Name}: Mert Iravul
 
 \textbf{Collaborators and Resources}: 
 
