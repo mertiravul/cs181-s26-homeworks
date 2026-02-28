@@ -179,7 +179,52 @@ times when we are likely to detect the planet.
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{1(a).} We can add and subtract $f(x)$:
+\[
+(y - \hat f_\mathcal{D}(x))^2 = ((y - f(x)) + (f(x) - \hat f_\mathcal{D}(x)))^2 = (y - f(x))^2 + (f(x) - \hat f_\mathcal{D}(x))^2 + 2(y - f(x))(f(x) - \hat f_\mathcal{D}(x))
+\]
+Taking $\mathbb{E}_{\mathcal{D}, y|x}$ of both sides:
+\[
+\text{MSE} = \mathbb{E}_{y|x}[(y - f(x))^2] + \mathbb{E}_\mathcal{D}[(f(x) - \hat f_\mathcal{D}(x))^2] + 2\mathbb{E}_{\mathcal{D}, y|x}[(y - f(x))(f(x) - \hat f_\mathcal{D}(x))]
+\]
+The third term is the cross-term.
+
+\textbf{1(b).} By Adam's Law: 
+\[
+\mathbb{E}_{\mathcal{D}, y|x}[(y - f(x))(f(x) - \hat f_\mathcal{D}(x))] = \mathbb{E}_\mathcal{D}[\mathbb{E}_{y|x}[(y - f(x))](f(x) - \hat f_\mathcal{D}(x))]
+\]
+Since $\mathbb{E}_{y|x}[y] = f(x)$, we have $\mathbb{E}_{y|x}[(y - f(x))] = 0$. Thus the third term equals 0.
+
+\textbf{1(c).} $\mathbb{E}_{y|x}[(y - f(x))^2] = \text{Var}(y|x) = \text{Var}(\varepsilon|x) = \sigma^2$
+
+\textbf{1(d).} We can add and subtract $\bar f(x)$:
+\[
+\mathbb{E}_\mathcal{D}[(f(x) - \hat f_\mathcal{D}(x))^2] = \mathbb{E}_\mathcal{D}[((f(x) - \bar f(x)) + (\bar f(x) - \hat f_\mathcal{D}(x)))^2]
+\]
+\[
+= (f(x) - \bar f(x))^2 + \mathbb{E}_\mathcal{D}[(\bar f(x) - \hat f_\mathcal{D}(x))^2] + 2(f(x) - \bar f(x))\mathbb{E}_\mathcal{D}[\bar f(x) - \hat f_\mathcal{D}(x)]
+\]
+The cross-term vanishes since $\mathbb{E}_\mathcal{D}[\hat f_\mathcal{D}(x)] = \bar f(x)$, so $\mathbb{E}_\mathcal{D}[\bar f(x) - \hat f_\mathcal{D}(x)] = 0$. Thus we obtain squared bias plus variance.
+
+\textbf{2.} The basis functions i chose are: $\phi_2(t) = [1, t, t^2]^\top$ (polynomial) and $\phi_3(t) = [1, \cos(t), \sin(t)]^\top$ (periodic).
+
+\textbf{3.} The ground truth (green) shows the true periodic process. Individual learned models (thin lines) exhibit high variance as they vary considerably across datasets. The mean predictor (black) averages out this variance and better approximates the true process. 
+
+Basis 1 has high bias and cannot capture the periodic structure, while Basis 2 has moderate bias and variance, and Basis 3 best approximates the true process because its structure matches the generating function. The plots are below:
+
+\begin{center}
+  \includegraphics[width=0.7\textwidth]{img_output/basis1.png}\\
+  \includegraphics[width=0.7\textwidth]{img_output/basis2.png}\\
+  \includegraphics[width=0.7\textwidth]{img_output/basis3.png}
+\end{center}
+
+\textbf{4.} With larger $N$, variance decreases for all bases because each model is trained on more data and estimates are more stable. Bias is largely unchanged since it depends on the model, not sample size. Basis 3 would benefit most as its lower variance would make the mean predictor even closer to the true process.
+
+\textbf{5.} For basis $\phi_3$, at $t=0.1$, first models P(observed) $\approx 0.497$ and variance over 10 models $\approx 0.00041$. At $t=3.2$: first model's P(observed) $\approx 0.473$; variance $\approx 0.00033$. The classification probability reflects irreducible noise, while the variance across models reflects model uncertainty from finite data. At $t=0.1$ and $t=3.2$, both probabilities are near 0.5, indicating high irreducible noise and the low variance indicates low model uncertainty.
+
+\textbf{6.} The alternate telescope data has the same observation times but differs in some observed outcomes, suggesting a different observation probability distribution. This could be because of a phase shift (maybe different hemisphere) or different telescope sensitivity. Refitting on the alternate data is reasonable if we plan to use that telescope as it would give a model calibrated to its specific observation pattern and improve scheduling decisions for that specific instrument.
+
+\textbf{7.} I found the cross-validation average errors as: basis1 $\approx 0.487$, basis2 $\approx 0.363$, basis3 $\approx 0.297$. Basis 3 performs best because its periodic structure matches the true generating process, achieving the best bias variance tradeoff.
 \end{solution}
 
 
@@ -265,7 +310,34 @@ These formulas are from the matrix cookbook linked here: \href{https://www.math.
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{1.} The likelihood is $p(\mathcal{D}; \pi) = \prod_{i=1}^n p(x_i, y_i; \pi) = \prod_{i=1}^n p(y_i; \pi) p(x_i \mid y_i)$. Let $y_i$ be the one hot encoded vector for example $i$ such that $y_{ik} = 1$ if and only if $y_i = C_k$. Thus, the joint probability for one example is: $p(x_i, y_i; \pi) = \prod_{k=1}^K \pi_k^{y_{ik}} \prod_{k=1}^K p(x_i \mid y_i = C_k)^{y_{ik}}$. Taking logs gives us:
+\[
+\ln p(\mathcal{D}; \pi) = \sum_{i=1}^n \sum_{k=1}^K y_{ik} \ln \pi_k + \sum_{i=1}^n \sum_{k=1}^K y_{ik} \ln p(x_i \mid y_i = C_k)
+\]
+We can note that the second term does not depend on $\pi$, so we can ignore it for the purpose of maximizing the likelihood. This gives us the log-likelihood:
+\[
+\ln p(\mathcal{D}; \pi) = \sum_{k=1}^K n_k \ln \pi_k \text{ where } n_k = \sum_{i=1}^n y_{ik}
+\]
+
+\textbf{2.} We can write the Lagrangian as $\mathcal{L} = \sum_{k=1}^K n_k \ln \pi_k + \lambda\left(\sum_{k=1}^K \pi_k - 1\right)$. Setting $\frac{\partial \mathcal{L}}{\partial \pi_k} = \frac{n_k}{\pi_k} + \lambda = 0$ gives $\pi_k = -\frac{n_k}{\lambda}$. From $\sum_{k=1}^K \pi_k = 1$ we get $-\frac{1}{\lambda} \sum_{k=1}^K n_k = 1$, so $\lambda = -n$. Thus we can find, $\hat{\pi}_k = \frac{n_k}{n}$.
+Intuitively, the MLE is the empirical proportion of class $k$, which makes sense as it is the best estimate.
+
+\textbf{3.} The log-likelihood terms involving $\mu_k$ come only from points with $y_i = C_k$.
+For $\mathcal{N}(x_i \mid \mu_k, \Sigma)$,
+$\frac{\partial}{\partial \mu_k} \ln \mathcal{N}(x_i \mid \mu_k, \Sigma) = \Sigma^{-1}(x_i - \mu_k)$. Thus:
+\[
+\nabla_{\mu_k} \ln p(\mathcal{D}) = \Sigma^{-1} \sum_{i: y_i = C_k} (x_i - \mu_k) = \Sigma^{-1} \left(\sum_{i: y_i = C_k} x_i - n_k \mu_k\right)
+\]
+
+\textbf{4.} Setting the gradient to zero gives us $\sum_{i: y_i = C_k} x_i = n_k \hat{\mu}_k$, so $\hat{\mu}_k = \frac{1}{n_k}\sum_{i: y_i = C_k} x_i$.\\
+Intuitively, this is the sample mean of class $k$, which makes sense as it is the best estimate.
+
+\textbf{5.} The Gaussian log-density is $-\frac{D}{2}\ln(2\pi) - \frac{1}{2}\ln|\Sigma| - \frac{1}{2}(x - \mu)^\top \Sigma^{-1} (x - \mu)$. Using the cookbook, we get $\frac{\partial}{\partial \Sigma} \ln |\det(\Sigma)| = \Sigma^{-\top}$ and $\frac{\partial}{\partial \Sigma} (a^\top \Sigma^{-1}b) = -\Sigma^{-\top} a b^\top \Sigma^{-\top}$. Summing over all $n$ points (with appropriate $\mu_{y_i}$) gives us:
+\[
+\frac{\partial \ln p(\mathcal{D})}{\partial \Sigma} = -\frac{n}{2} \Sigma^{-\top} + \frac{1}{2}\Sigma^{-\top} \left(\sum_{i=1}^n (x_i - \mu_{y_i})(x_i - \mu_{y_i})^\top \right)\Sigma^{-\top}
+\]
+
+\textbf{6.} Setting the gradient to zero and solving gives us $\hat{\Sigma} = \frac{1}{n} \sum_{i=1}^n (x_i - \hat{\mu}_{y_i})(x_i - \hat{\mu}_{y_i})^\top$ which is the pooled sample covariance.
 \end{solution}
 
 \newpage
@@ -337,7 +409,22 @@ After implementing the above classifiers, complete the following exercises:
 \newpage
 
 \begin{solution}
-	Your solution here.
+\textbf{1.} Decision boundary plots are below:
+
+\begin{center}
+  \includegraphics[width=0.6\textwidth]{img_output/Gaussian Shared Covariance.png}\\
+  \includegraphics[width=0.6\textwidth]{img_output/Gaussian Separate Covariance.png}\\
+  \includegraphics[width=0.6\textwidth]{img_output/Softmax Regression.png}\\
+  \includegraphics[width=0.6\textwidth]{img_output/Softmax with Basis.png}\\
+  \includegraphics[width=0.6\textwidth]{img_output/KNN k=1.png}\\
+  \includegraphics[width=0.6\textwidth]{img_output/KNN k=5.png}
+\end{center}
+
+The Gaussian models produce linear boundaries for shared $\Sigma$ and quadratic boundaries for separate $\Sigma$. Softmax regression yields linear boundaries but the basis version produces curved boundaries due to $\phi(x)$. kNN yields piecewise constant, highly irregular boundaries that follow the training data. The shape is dictated by each model's inductive bias. Gaussians assume class conditional normality, softmax learns linear decision functions, and kNN is nonparametric and memorizes local structure.
+
+\textbf{2.} For loan applicant with debt 0.32, credit 350 (transformed $\approx (1.64, -1.57)$) we get: Gaussian shared and separate reject, softmax vanilla rejects while softmax basis requires guarantor, and both kNNs reject. We find the classification probabilites for softmax as: vanilla $\approx [1, 0, 0]$, and basis $\approx [0.25, 0.66, 0.09]$. The vanilla model is very confident because the point lies in a region far from the training data where the learned boundary extrapolates. The basis model spreads probability across classes. When predicting far from the training data, we should be cautious as models may extrapolate unreliably and confidence can be misleading.
+
+\textbf{3.} Using past loan decisions to train a classifier can perpetuate historical biases (for example discrimination against certain groups). Credit scores and debt-to-income ratio may correlate with protected attributes and can disadvantage people with limited credit history (for example young adults or immigrants). Other factors such as income stability, employment, and purpose of loan may also be relevant. Relying solely on such a classifier can be ethically problematic as it can never capture all relevant factors in real life and may lead to unfair decisions.
 \end{solution}
 
 \newpage
@@ -402,7 +489,20 @@ Try not to touch anything that is not in between ``\textit{sol}" and ``\textit{l
 \pagebreak
 
 \begin{solution}
-	Your solution here.
+\textbf{1.} $\mathcal{L}(w) = \frac{1}{2}\|Xw - y\|^2 = \frac{1}{2}(Xw - y)^\top(Xw - y)$. Using $\nabla_{w}(a^\top w) = a$ and $\nabla_{w}(w^\top A w) = 2A w$ for symmetric $A$, we get $\nabla_{w} \mathcal{L} = X^\top(Xw - y)$.
+
+\textbf{2.} The full batch gradient descent update rule is $w \leftarrow w - \eta X^\top(Xw - y)$.
+
+\textbf{3.} $\mathcal{L}_{\text{ridge}} = \mathcal{L} + \frac{\lambda}{2}\|w\|^2$, and the gradient of $\frac{\lambda}{2}\|w\|^2$ is $\lambda w$. Thus $\nabla_{w}\mathcal{L}_{\text{ridge}} = X^\top(Xw - y) + \lambda w$. The regularization adds $\lambda w$, shrinking the gradient toward zero.
+
+\textbf{4.} The ridge update rule is $w \leftarrow w - \eta(X^\top(Xw - y) + \lambda w) = (1 - \eta\lambda)w - \eta X^\top(Xw - y)$. The factor $(1-\eta\lambda)$ explicitly shrinks $w$ toward zero each step, illustrating the shrinkage effect of ridge regularization.
+
+\textbf{5--6.} In the unregularized case, the loss has a flat valley (ill-conditioned), meaning there are infinite solutions. As a result, SGD, Momentum, and Adam converge slowly to different points along the optimum subspace. With ridge, the loss is strictly convex with a unique minimum. All three optimizers converge to approximately the same point. Momentum and Adam converge faster than plain SGD due to adaptive step sizes and momentum. The main geometric difference is that the unregularized loss has a flat valley, while the regularized loss has a unique minimum.
+
+\begin{center}
+  \includegraphics[width=1.0\textwidth]{img_output/Linear Ridge Contour Plots.png}
+\end{center}
+
 \end{solution}
 
 
@@ -411,7 +511,7 @@ Try not to touch anything that is not in between ``\textit{sol}" and ``\textit{l
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \pagebreak
-\textbf{Name}:
+\textbf{Name}: Mert Iravul
 
 \textbf{Collaborators and Resources}: 
 

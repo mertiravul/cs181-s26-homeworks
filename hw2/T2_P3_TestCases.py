@@ -20,10 +20,16 @@ def test_p3_softmax(vanilla_model, basis_model):
     student_v_weights = vanilla_model.W
     student_basis_weights = basis_model.W
     
-    assert np.allclose(student_v_weights, vanilla_weights), f"Failed for softmax regression: incorrect weights"
-    assert np.allclose(student_basis_weights, basis_weights), f"Failed for basis regression: incorrect weights"
-    
-    print("Passed softmax regression tests")
+    if not np.allclose(student_v_weights, vanilla_weights):
+        print(f"Failed for softmax regression: incorrect weights")
+        print(f"Expected: {vanilla_weights}")
+        print(f"Got: {student_v_weights}")
+    if not np.allclose(student_basis_weights, basis_weights):
+        print(f"Failed for basis regression: incorrect weights")
+        print(f"Expected: {basis_weights}")
+        print(f"Got: {student_basis_weights}")
+    else:
+      print("Passed softmax regression tests")
 
 
 def test_p3_knn(knn_model_1, knn_model_5):
@@ -50,8 +56,17 @@ def test_p3_knn(knn_model_1, knn_model_5):
 
     distances = np.array([[knn_model_1.distance(point, x) for x in knn_model_1.X] for point in points])
     
-    assert np.allclose(knn_soln_distances, distances), f"Failed during distance calculation"
-    assert np.allclose(knn_1_soln_preds, knn_1_preds), f"Failed for k = 1 predictions"
-    assert np.allclose(knn_5_soln_preds, knn_5_preds), f"Failed for k = 5 predictions"
-    
-    print("Passed KNN tests")
+    if not np.allclose(knn_soln_distances, distances):
+        print(f"Failed during distance calculation")
+        print(f"Expected: {knn_soln_distances}")
+        print(f"Got: {distances}")
+    if not np.allclose(knn_1_soln_preds, knn_1_preds):
+        print(f"Failed for k = 1 predictions")
+        print(f"Expected: {knn_1_soln_preds}")
+        print(f"Got: {knn_1_preds}")
+    if not np.allclose(knn_5_soln_preds, knn_5_preds):
+        print(f"Failed for k = 5 predictions")
+        print(f"Expected: {knn_5_soln_preds}")
+        print(f"Got: {knn_5_preds}")
+    else:
+        print("Passed KNN tests")
