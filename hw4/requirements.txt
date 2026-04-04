@@ -1,0 +1,7 @@
+# CS181 HW4 — notebook dependencies (Python 3.10+)
+numpy>=1.26,<2
+torch>=2.2
+matplotlib>=3.7
+torchvision>=0.17
+datasets>=2.16
+huggingface_hub>=0.20

@@ -18,6 +18,8 @@
 \usepackage{listings}
 \usepackage{../common}
 \usepackage{float,booktabs}
+% Figures exported from the notebook (PDF/PNG) — place files under ./figures/
+\graphicspath{{./figures/}}
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\KL}{D_{\mathrm{KL}}}
 \newcommand{\R}{\mathbb{R}}
@@ -227,7 +229,71 @@ briefly describe what it suggests the model is attending to.
 
 
 \begin{solution}
-	Your solution here.
+
+\paragraph{1(a)(i).}
+Row wise multiplication gives
+\[
+  Q = X W_Q = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}, \quad
+  K = X W_K = \begin{pmatrix} 1 & 0 \\ 1 & 1 \end{pmatrix}, \quad
+  V = X W_V = \begin{pmatrix} 2 & 0 \\ 0 & 1 \end{pmatrix}
+\]
+The raw scores are $S_{ij} = q_i^\trans k_j$ (dot product of row $i$ of $Q$ with row $j$ of $K$):
+\[
+  S = Q K^\trans = \begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}
+\]
+
+\paragraph{1(a)(ii).}
+With $d_k = 2$, the scaled matrix is $S/\sqrt{d_k}$:
+\[
+  \frac{1}{\sqrt{2}}\begin{pmatrix} 1 & 2 \\ 0 & 1 \end{pmatrix}
+  = \begin{pmatrix} 1/\sqrt{2} & \sqrt{2} \\ 0 & 1/\sqrt{2} \end{pmatrix}
+\]
+For row $i$, subtract the row max, exponentiate, and normalize. For row~1 the max is $\sqrt{2}$ at column~2, so the shifted row is $[-1/\sqrt{2},\,0]$ and
+\[
+  A_{1j} = \frac{e^{z_j - \max}}{\sum_k e^{z_k - \max}}, \quad
+  A_{11} = \frac{e^{-1/\sqrt{2}}}{1 + e^{-1/\sqrt{2}}}, \quad A_{12} = \frac{1}{1 + e^{-1/\sqrt{2}}}
+\]
+Row~2 has the same shifted values $[-1/\sqrt{2},\,0]$, hence the same attention weights as row~1. Numerically $A_{11} \approx 0.33$, $A_{12} \approx 0.67$. The attention output is $A V$ (each row of $A$ times $V$).
+
+\paragraph{1(b)(i).}
+By linearity, $\E[q^\trans k] = \sum_i \E[q_i]\E[k_i] = 0$. Because $q_i k_i$ are independent with mean~$0$,
+\[
+  \mathrm{Var}(q^\trans k) = \sum_{i=1}^{d_k} \mathrm{Var}(q_i k_i)
+  = \sum_{i=1}^{d_k} \E[q_i^2]\E[k_i^2] = d_k
+\]
+
+\paragraph{1(b)(ii).}
+The typical magnitude of $q^\trans k$ grows like $\sqrt{d_k}$ (standard deviation $\sqrt{d_k}$). Large dot products drive softmax inputs into large positive and negative values, so the distribution becomes more peaked (nearly one-hot).
+
+\paragraph{1(b)(iii).}
+Scaling gives $(q/\sqrt{d_k})^\trans k = (q^\trans k)/\sqrt{d_k}$, which has variance $\mathrm{Var}(q^\trans k)/d_k = 1$.
+
+\paragraph{1(c)(i).}
+Let $\widetilde{X} = P_\sigma X$. Then $\widetilde{Q} = P_\sigma Q$, $\widetilde{K} = P_\sigma K$, $\widetilde{V} = P_\sigma V$. The score matrix becomes $\widetilde{S} = \widetilde{Q}\widetilde{K}^\trans = P_\sigma S P_\sigma^\trans$, so row~$i$ of $\widetilde{S}$ is row~$\sigma(i)$ of $S$ with columns permuted the same way. Softmax is applied row-wise, so $\widetilde{A} = P_\sigma A P_\sigma^\trans$. Then $\widetilde{A}\widetilde{V} = P_\sigma A V$. Thus $\mathrm{Attention}(P_\sigma X) = P_\sigma\,\mathrm{Attention}(X)$.
+
+\paragraph{1(c)(ii).}
+Permutation equivariance means the layer cannot tell which position is first or second, shuffling words shuffles outputs the same way. Language meaning depends on order, so the model must distinguish positions.
+
+\paragraph{1(c)(iii).}
+The positional matrix $P\,E$ assigns different vectors to different positions. Permuting rows of $X$ without permuting the same rows of $P\,E$ changes which position gets which encoding, so the input to attention is no longer a pure row-permutation of the original; equivariance fails.
+
+\paragraph{1(d).}
+Implemented in \texttt{hw4\_release.ipynb}, with row wise max subtracted softmax.
+
+\paragraph{1(e).}
+Training curves and a learned attention map are shown below. The model reaches high test accuracy on the synthetic task. The heatmap for head~0 suggests the \texttt{[CLS]} query places substantial mass on the position containing \texttt{VAL0}/\texttt{VAL1}, which carries the label, rather than on distractor noise tokens.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\linewidth]{p1_transformer_curves.png}
+  \caption{Synthetic transformer: training loss and test accuracy.}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\linewidth]{p1_attention_head0.png}
+  \caption{Attention weights (head 0) on one test sequence.}
+\end{figure}
+
 \end{solution}
 
 
@@ -338,8 +404,128 @@ In a VAE, the encoder outputs the parameters of the approximate posterior\\ $q_\
 \end{enumerate}
 \end{enumerate}
 \end{problem}
+
+\newpage
+
 \begin{solution}
-	Your solution here.
+
+\paragraph{1(a).}
+Implemented in the notebook. convolutional encoder-decoder on CelebA with train/test MSE curves below, five test originals vs.\ reconstructions.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\linewidth]{ae_train_test_loss.png}
+  \caption{Standard autoencoder: train vs.\ test reconstruction MSE.}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ae_reconstructions.png}
+  \caption{Five CelebA test images (top) and reconstructions (bottom).}
+\end{figure}
+
+\paragraph{1(b).}
+Random $z \sim \mathcal{N}(0, I)$ decoded from the AE usually do not look like realistic faces (see figure). The AE is only trained to map each training image to some code and back, nothing forces those codes to cover $\R^d$ or to match the Gaussian prior, so most Gaussian draws lie in regions the decoder never learned to use.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ae_random_samples.png}
+  \caption{AE: samples from $\mathcal{N}(0, I)$ passed through the decoder.}
+\end{figure}
+
+\paragraph{2(a).}
+The integral $\int p(x \mid z)\,p(z)\,dz$ is a high-dimensional integral of a highly peaked neural likelihood against the prior; we cannot enumerate a grid. Monte Carlo with $z^{(k)} \sim p(z)$ estimates the average of $p(x \mid z)$, not the integral: the quantity $\E_{p(z)}[p(x \mid z)]$ differs from $p(x)$ by Jensen's gap for $\log$, and the variance of importance style estimators explodes when the prior samples rarely hit regions where $p(x \mid z)$ is large.
+
+\paragraph{2(b)(i).}
+Using Bayes rule, $\log p(z \mid x) = \log p(x \mid z) + \log p(z) - \log p(x)$. Substitute into the KL definition and expand the expectation:
+\[
+  \KL\!\big(q_\phi \,\|\, p(\cdot \mid x)\big)
+  = \E_q\big[\log q_\phi(z \mid x) - \log p(x \mid z) - \log p(z)\big] + \log p(x)
+\]
+Rearranging yields
+\[
+  \log p(x) = \KL\!\big(q_\phi \,\|\, p(\cdot \mid x)\big) + \E_q\big[\log p(x, z) - \log q_\phi(z \mid x)\big]
+\]
+
+\paragraph{2(b)(ii).}
+Since $\KL \geq 0$, the second term (ELBO) satisfies $\mathrm{ELBO} \leq \log p(x)$. Maximizing a lower bound on $\log p(x)$ pushes up the true likelihood whenever the bound is reasonably tight.
+
+\paragraph{2(b)(iii).}
+Split $\log p(x, z) = \log p(x \mid z) + \log p(z)$:
+\[
+  \mathrm{ELBO} = \E_q[\log p(x \mid z)] + \E_q[\log p(z) - \log q_\phi(z \mid x)]
+  = \E_q[\log p(x \mid z)] - \KL\!\big(q_\phi \,\|\, p(z)\big)
+\]
+
+\paragraph{2(c)(i).}
+With Gaussian decoder, $\log p(x \mid z)$ is (up to constants) negative squared error, minimizing $-\E_q[\log p(x \mid z)]$ is the same spirit as minimizing reconstruction MSE, encouraging accurate reconstructions from latent draws.
+
+\paragraph{2(c)(ii).}
+Matching $q_\phi$ to $\mathcal{N}(0, I)$ spreads mass so that sampling $z \sim \mathcal{N}(0, I)$ at test time lands in regions the decoder was trained to invert, addressing the unstructured latent of 1(b).
+
+\paragraph{2(c)(iii).}
+Strong reconstruction pushes informative but possibly irregular codes; the KL pulls codes toward the prior and can blur reconstructions while making samples more coherent than the plain AE.
+
+\paragraph{3(a).}
+A discrete draw $z \sim q_\phi$ does not depend smoothly on $(\mu, \sigma)$ in a way PyTorch can differentiate through. For $\epsilon \sim \mathcal{N}(0, I)$, the vector $z = \mu + \sigma \odot \epsilon$ is Gaussian with mean $\mu$ and diagonal variance $\sigma^2$; gradients flow through $\mu$ and $\sigma$ while $\epsilon$ is a fixed noise draw per forward pass.
+
+\paragraph{3(b).}
+Coordinatewise, $\KL(q_j \,\|\, p_j) = \tfrac{1}{2}\big(\mu_j^2 + \sigma_j^2 - \log \sigma_j^2 - 1\big)$, summing gives the stated formula.
+
+\paragraph{3(c).}
+VAE training curves (reconstruction, KL, total) and visual results are below. Random prior samples are more face like than the AE's because the KL term aligns the aggregate posterior with $\mathcal{N}(0, I)$.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.32\linewidth}\centering\includegraphics[width=\linewidth]{vae_recon_loss.png}\end{minipage}\hfill
+  \begin{minipage}{0.32\linewidth}\centering\includegraphics[width=\linewidth]{vae_kl.png}\end{minipage}\hfill
+  \begin{minipage}{0.32\linewidth}\centering\includegraphics[width=\linewidth]{vae_total_loss.png}\end{minipage}
+  \caption{VAE: reconstruction term, KL term, and total negative ELBO (train vs.\ test).}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{vae_reconstructions.png}
+  \caption{VAE: five test originals (top) and reconstructions (bottom).}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{vae_random_samples.png}
+  \caption{VAE: decoding random $z \sim \mathcal{N}(0, I)$.}
+\end{figure}
+
+\paragraph{Part 4 (latent arithmetic).}
+The notebook computes attribute direction vectors in latent space and applies \texttt{apply\_attribute} / \texttt{interpolate\_attribute}. Below are VAE and AE grids (negative / original / positive along each direction), then VAE interpolations along each direction.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.48\linewidth}\centering
+    \includegraphics[width=\linewidth]{vae_attr_smiling.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\linewidth}\centering
+    \includegraphics[width=\linewidth]{vae_attr_eyeglasses.png}
+  \end{minipage}
+  \caption{VAE: latent attribute shifts for \texttt{Smiling} and \texttt{Eyeglasses} (rows: $-$direction, original, $+$direction).}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.48\linewidth}\centering
+    \includegraphics[width=\linewidth]{ae_attr_smiling.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\linewidth}\centering
+    \includegraphics[width=\linewidth]{ae_attr_eyeglasses.png}
+  \end{minipage}
+  \caption{Standard AE: same latent attribute manipulations.}
+\end{figure}
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.48\linewidth}\centering
+    \includegraphics[width=\linewidth]{vae_interp_smiling.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\linewidth}\centering
+    \includegraphics[width=\linewidth]{vae_interp_eyeglasses.png}
+  \end{minipage}
+  \caption{VAE: interpolation along the learned \texttt{Smiling} and \texttt{Eyeglasses} directions.}
+\end{figure}
+
 \end{solution}
 \newpage
 
@@ -412,8 +598,58 @@ A key challenge in MoE training is \textbf{expert collapse}, where the gating ne
 
 \end{problem}
 
+\newpage
+
 \begin{solution}
-	Your solution here.
+
+\paragraph{1(a).}
+Let $Z_i \in \{0,1\}$ indicate whether tree $i$ is correct, so $\bar{Z} = X/B$ and $\E[\bar{Z}] = p$. The ensemble errs when at most half the trees are correct, i.e.\ $X \le B/2$, equivalently $\bar{Z} \le 1/2$. Take $t = p - \tfrac{1}{2} > 0$. Then $\bar{Z} - p \le -(p - \tfrac{1}{2})$ implies $\bar{Z} \le 1/2$. Hoeffding with $a_i = 0$, $b_i = 1$ gives $\sum_i (b_i - a_i)^2 = B$, hence
+\[
+  P\!\Big(\bar{Z} - p \le -\Big(p - \tfrac{1}{2}\Big)\Big)
+  \le \exp\!\left(\frac{-2B^2 (p - \tfrac{1}{2})^2}{B}\right)
+  = \exp\!\Big({-2B\big(p - \tfrac{1}{2}\big)^2}\Big)
+\]
+
+\paragraph{1(b).}
+For $p = 0.6$, the exponent is $-2B(0.1)^2 = -0.02B$:
+\[
+  B = 10:\ e^{-0.2} \approx 0.82, \quad
+  B = 100:\ e^{-2} \approx 0.14, \quad
+  B = 1000:\ e^{-20} \approx 2.1 \times 10^{-9}
+\]
+We need $\exp(-0.02B) < 10^{-6}$, i.e.\ $B > \frac{\ln 10^6}{0.02} \approx 690.8$, so the first integer is $B = 691$. The bound is usually loose (conservative) because it only uses boundedness, not the binomial structure, but it still shows error probability drops exponentially in $B$ under independence.
+
+\paragraph{1(c)(i).}
+Correlated trees reuse the same mistakes: their errors cooccur, so the average does not concentrate as if we had $B$ independent bits of information.
+
+\paragraph{1(c)(ii).}
+Random subsets of features make splits in different trees depend on different dimensions, reducing pairwise correlation between trees so the ensemble mean behaves more like an average of weakly dependent (closer to independent) classifiers.
+
+\paragraph{2(a).}
+Let $S = \sum_b T_b$. Using $\mathrm{Cov}(T_i, T_j) = \rho \sigma^2$ for $i \neq j$ and $\mathrm{Var}(T_i) = \sigma^2$,
+\[
+  \mathrm{Var}(S) = \sum_i \mathrm{Var}(T_i) + \sum_{i \neq j} \mathrm{Cov}(T_i, T_j)
+  = B\sigma^2 + B(B-1)\rho\sigma^2
+\]
+Thus
+\[
+  \mathrm{Var}\!\left(\frac{S}{B}\right)
+  = \frac{\sigma^2}{B} + \frac{(B-1)\rho\sigma^2}{B}
+  = \rho\sigma^2 + \frac{(1-\rho)\sigma^2}{B}
+\]
+
+\paragraph{2(b)(i).}
+As $B \to \infty$, the variance tends to $\rho\sigma^2$. If $\rho > 0$, we cannot drive variance to zero with more trees alone, only reducing correlation removes the floor.
+
+\paragraph{2(b)(ii).}
+If $\rho = 0$, trees are uncorrelated and we recover the usual $O(1/B)$ averaging benefit (idealized bagging with independent bootstraps). If $\rho = 1$, all trees are identical and averaging does nothing. Variance stays $\sigma^2$, as with a single tree copied $B$ times.
+
+\paragraph{2(c).}
+$m = 1$ minimizes correlation but also starves each split of useful features, hurting bias and tree quality. The hyperparameter $m$ trades off correlation (diversity) against the chance that each split picks informative coordinates.
+
+\paragraph{3.}
+A random forest is dense, every tree evaluates every input, so doubling trees roughly doubles inference cost, capacity scales together with compute. A sparse MoE activates only a few experts per token, so total parameters (capacity) can grow large while per token FLOPs stay controlled. Random forests cannot hide most of their capacity from each prediction the way routed experts can, so they do not scale capacity and compute independently in the same sense as MoE.
+
 \end{solution}
 
 
@@ -422,7 +658,7 @@ A key challenge in MoE training is \textbf{expert collapse}, where the gating ne
 
 
 
-\textbf{Name}:
+\textbf{Name}: Mert Iravul
 
 \textbf{Collaborators and Resources}: 
 
