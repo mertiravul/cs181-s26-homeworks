@@ -204,7 +204,35 @@ In this problem, you will be working with one-dimensional Kalman filters, which 
 \newpage
 
 \begin{solution}
-	Your solution here.
+
+\textbf{1(a).} The quantity $p(z_t \mid x_0, \ldots, x_t)$ is proportional to $\alpha_t(z_t)$, the forward message. Since we condition only on observations up to and including time $t$, no backward pass ($\beta_t$) is needed. This operation is called filtering.
+
+\textbf{1(b).} From the emission model $x_t = z_t + \gamma_t$ with $\gamma_t \sim N(0, \siggam^2)$, so we have:
+\[
+p(x_t \mid z_t) = N(x_t;\, z_t,\, \siggam^2)
+\]
+
+\textbf{1(c).} We marginalize out $z_{t-1}$:
+\[
+p(z_t \mid x_0, \ldots, x_{t-1}) = \int p(z_t \mid z_{t-1})\, p(z_{t-1} \mid x_0, \ldots, x_{t-1})\, dz_{t-1}
+\]
+Since $z_t = z_{t-1} + \epsilon_{t-1}$, we have $p(z_t \mid z_{t-1}) = N(z_t;\, z_{t-1},\, \sigeps^2)$, or equivalently $N(z_t - z_{t-1};\, 0,\, \sigeps^2)$. By the inductive hypothesis, $p(z_{t-1} \mid x_0, \ldots, x_{t-1}) = N(z_{t-1};\, \mu_{t-1},\, \sigma_{t-1}^2)$. Using the convolution identity from the hint, we get:
+\[
+p(z_t \mid x_0, \ldots, x_{t-1}) = N(z_t;\, \mu_{t-1},\, \sigma_{t-1}^2 + \sigeps^2)
+\]
+We can define the predicted variance as $\bar{\sigma}_t^2 = \sigma_{t-1}^2 + \sigeps^2$ for later parts.
+
+\textbf{1(d).} We combine (b) and (c):
+\[
+p(z_t \mid x_0, \ldots, x_t) \propto p(x_t \mid z_t)\, p(z_t \mid x_0, \ldots, x_{t-1}) = N(x_t;\, z_t,\, \siggam^2)\, N(z_t;\, \mu_{t-1},\, \bar{\sigma}_t^2)
+\]
+Using Hint 1, rewrite $N(x_t;\, z_t,\, \siggam^2) = N(z_t;\, x_t,\, \siggam^2)$. Then using the product of Gaussians identity from Hint 2 with $\mu_a = x_t$, $\sigma_a^2 = \siggam^2$, $\mu_b = \mu_{t-1}$, $\sigma_b^2 = \bar{\sigma}_t^2$, we get:
+\[
+\mu_t = \frac{\bar{\sigma}_t^2}{\siggam^2 + \bar{\sigma}_t^2}\, x_t + \frac{\siggam^2}{\siggam^2 + \bar{\sigma}_t^2}\, \mu_{t-1}, \qquad \sigma_t^2 = \left(\frac{1}{\siggam^2} + \frac{1}{\bar{\sigma}_t^2}\right)^{-1}
+\]
+
+\textbf{2.} The mean $\mu_t$ is a precision weighted average of the current observation $x_t$ and the prior prediction $\mu_{t-1}$, which summarizes all past observations. When the observation noise $\siggam^2$ is small relative to the prediction uncertainty $\bar{\sigma}_t^2$, $\mu_t$ places more weight on the new observation $x_t$. Conversely, when the prediction is already precise, $\mu_t$ relies more on the accumulated past.
+
 \end{solution}
 
 \newpage
@@ -269,7 +297,63 @@ Note that we are doing infinite-horizon planning to maximize the expected reward
 \newpage
 
 \begin{solution}
-	Your solution here.
+
+\textbf{1(a)-(b).} Implemented in \texttt{hw6\_release.ipynb}.
+
+\textbf{1(c).} The first 4 iterations of policy iteration are shown below. The policy stabilizes quickly, by iteration 3-4 the arrows and value function are nearly converged.
+
+\begin{figure}[H]
+    \centering
+    \subfloat[$i=1$]{\includegraphics[width=0.45\textwidth]{figures/p2_pi_first4_Policy_i1.png}}\hfill
+    \subfloat[$i=2$]{\includegraphics[width=0.45\textwidth]{figures/p2_pi_first4_Policy_i2.png}}\\
+    \subfloat[$i=3$]{\includegraphics[width=0.45\textwidth]{figures/p2_pi_first4_Policy_i3.png}}\hfill
+    \subfloat[$i=4$]{\includegraphics[width=0.45\textwidth]{figures/p2_pi_first4_Policy_i4.png}}
+\end{figure}
+
+\textbf{1(d).} With \texttt{ct = 0.01}, policy iteration converges at iteration 5. Similarly with \texttt{ct = 0.001} and \texttt{ct = 0.0001}, it also converges at iteration 5. Policy iteration converges in very few outer iterations regardless of the convergence tolerance, because each step performs a full policy evaluation and the number of distinct deterministic policies is finite. Figure below shows the converged value function and policy for each tolerance.
+
+\begin{figure}[H]
+    \centering
+    \subfloat[$\texttt{ct}=0.01$]{\includegraphics[width=0.32\textwidth]{figures/p2_pi_conv_ct001_Policy_i5.png}}\hfill
+    \subfloat[$\texttt{ct}=0.001$]{\includegraphics[width=0.32\textwidth]{figures/p2_pi_conv_ct0001_Policy_i5.png}}\hfill
+    \subfloat[$\texttt{ct}=0.0001$]{\includegraphics[width=0.32\textwidth]{figures/p2_pi_conv_ct00001_Policy_i5.png}}
+\end{figure}
+
+\textbf{2(a).} Implemented in \texttt{hw6\_release.ipynb}. 
+
+\textbf{2(b).} The first 4 iterations of value iteration are shown below. We see that convergence is slower than policy iteration, the value function is still changing visibly at iteration 4.
+
+\begin{figure}[H]
+    \centering
+    \subfloat[$i=1$]{\includegraphics[width=0.45\textwidth]{figures/p2_vi_first4_Value_i1.png}}\hfill
+    \subfloat[$i=2$]{\includegraphics[width=0.45\textwidth]{figures/p2_vi_first4_Value_i2.png}}\\
+    \subfloat[$i=3$]{\includegraphics[width=0.45\textwidth]{figures/p2_vi_first4_Value_i3.png}}\hfill
+    \subfloat[$i=4$]{\includegraphics[width=0.45\textwidth]{figures/p2_vi_first4_Value_i4.png}}
+\end{figure}
+
+\textbf{2(c).} With \texttt{ct = 0.01}, value iteration converges at iteration 25. With \texttt{ct = 0.001}, it converges at iteration 31. With \texttt{ct = 0.0001}, it converges at iteration 38. Unlike policy iteration, value iteration converges more slowly and is sensitive to the tolerance because it only performs a single backup per iteration rather than a full policy evaluation. Converged value functions and policies are shown below:
+
+\begin{figure}[H]
+    \centering
+    \subfloat[$\texttt{ct}=0.01$ (iter.\ 25)]{\includegraphics[width=0.32\textwidth]{figures/p2_vi_conv_ct001_Value_i25.png}}\hfill
+    \subfloat[$\texttt{ct}=0.001$ (iter.\ 31)]{\includegraphics[width=0.32\textwidth]{figures/p2_vi_conv_ct0001_Value_i31.png}}\hfill
+    \subfloat[$\texttt{ct}=0.0001$ (iter.\ 38)]{\includegraphics[width=0.32\textwidth]{figures/p2_vi_conv_ct00001_Value_i38.png}}
+\end{figure}
+
+\textbf{3.} The converged policies for $\gamma \in \{0.6, 0.7, 0.8, 0.9\}$ are shown below. At $\gamma = 0.6$, the agent is myopic and tends to move toward the nearest small positive rewards ($+4$ and $+20$), often avoiding the center where $-50$ penalties lie. As $\gamma$ increases, the agent becomes more willing to traverse negative reward states to reach the $+50$ goal. By $\gamma = 0.9$, nearly all states point east toward the $+50$ reward because the agent heavily weights future returns and the large reward outweighs the discounted penalties along the path. The key tradeoff is that higher $\gamma$ makes distant but large rewards more attractive relative to nearby smaller ones.
+
+\begin{figure}[H]
+    \centering
+    \subfloat[$\gamma=0.6$]{\includegraphics[width=0.45\textwidth]{figures/p2_gamma_06_Value_i18.png}}\hfill
+    \subfloat[$\gamma=0.7$]{\includegraphics[width=0.45\textwidth]{figures/p2_gamma_07_Value_i25.png}}\\
+    \subfloat[$\gamma=0.8$]{\includegraphics[width=0.45\textwidth]{figures/p2_gamma_08_Value_i39.png}}\hfill
+    \subfloat[$\gamma=0.9$]{\includegraphics[width=0.45\textwidth]{figures/p2_gamma_09_Value_i80.png}}
+\end{figure}
+
+\textbf{4.} In the episodic variant where the game ends at any positive reward state, the optimal policy depends on $\gamma$. For low $\gamma$, the agent prefers the nearest positive reward state (e.g.\ $+4$) because future rewards are heavily discounted and reaching $+50$ requires traversing penalty states. For high $\gamma$, the agent heads toward $+50$ because the discounted cost of passing through negative states is small compared to the large terminal reward. In the limit $\gamma \to 1$, the agent always targets the highest reward terminal state.
+
+\textbf{5.} The model based approach (building a Gridworld, solving with planning) is valuable because it is safe. We can iterate on the model without acting out with the real robot. Planning is also fast once the model is specified. However, the model may be wrong. The true transition probabilities, reward structure, and state space of the real environment may differ from our idealized grid. RL on the real robot could discover dynamics the model misses, but is expensive, slow, and risks damaging the robot. Both approaches are limited by how well the reward function captures the true objective.
+
 \end{solution}
 
 
@@ -324,7 +408,52 @@ Note that we are doing infinite-horizon planning to maximize the expected reward
     
 
 \begin{solution}
-	Your solution here.
+
+I implemented a Q-learning agent with $\epsilon$-greedy exploration, gravity inference, and velocity binning in \texttt{hw6\_release.ipynb}. The state is represented with four features: (1) the horizontal distance to the next tree (4 bins, bin width $150$ pixels), (2) the vertical offset between the gap center and the monkey center (12 bins, bin width $30$ pixels, centered so that zero offset falls near the middle of the index range), (3) the monkey's vertical velocity (7 bins, bin width $8$ pixels/tick), and (4) inferred gravity (2 bins: inferred fall $\le 2$ vs.\ $> 2$ pixels per timestep). I infer gravity at the start of each epoch by letting the monkey swing without jumping for the first timestep and comparing successive monkey top positions. My Q-table has shape $2 \times 4 \times 12 \times 7 \times 2 = 1344$ entries, which is small enough to fill reasonably over $100$ epochs.
+
+In order to try different learning rates, discounts, and exploration levels, I ran four full $100$ epoch sweeps with \texttt{npr.seed(181)} and overlaid the curves in the figure below.. Each sweep uses the same $\epsilon$ decay schedule (explained below) but varies one knob relative to the baseline: lower $\alpha$, lower $\gamma$, or higher $\epsilon_0$. The notebook saves \texttt{hist.npy} from the baseline sweep (first configuration). All four score histories are also stored in \texttt{p3\_param\_sweep.npz}.
+
+I initialize exploration at $\epsilon_0$. After each completed game, \texttt{reset()} increments an epoch counter $n$ and sets $\epsilon \leftarrow \epsilon_0 \cdot (0.95)^{n}$ before the next episode. Each sweep calls \texttt{run\_games(agent, hist, 100, 100)}.
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\hline
+\textbf{Parameter} & \textbf{Value for my chosen (baseline) agent} \\
+\hline
+Learning rate $\alpha$ & $0.5$ \\
+Discount $\gamma$ & $0.9$ \\
+Initial $\epsilon_0$ & $0.3$ \\
+$\epsilon$ decay factor (per completed epoch) & $0.95$ \\
+Horizontal bins / width & $4$ / $150$ px \\
+Gap offset bins / width & $12$ / $30$ px \\
+Velocity bins / width & $7$ / $8$ px/tick \\
+Gravity bins; threshold & $2$; $\le 2$ vs.\ $> 2$ \\
+Training epochs; tick length & $100$; $100$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{@{}lcccccc@{}}
+\hline
+\textbf{Setting} & $\alpha$ & $\gamma$ & $\epsilon_0$ & decay & \textbf{Best score} & \textbf{Epoch} \\
+\hline
+Baseline (\texttt{hist.npy}) & $0.5$ & $0.9$ & $0.3$ & $0.95$ & $55$ & $80$ \\
+Lower learning rate & $0.2$ & $0.9$ & $0.3$ & $0.95$ & $46$ & $98$ \\
+Lower discount & $0.5$ & $0.7$ & $0.3$ & $0.95$ & $33$ & $77$ \\
+Higher initial exploration & $0.5$ & $0.9$ & $0.5$ & $0.95$ & $86$ & $83$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=0.95\textwidth]{figures/p3_score_vs_epoch.png}
+\end{center}
+\end{figure}
+
+In this seed, the baseline reaches score $55$ by epoch $80$, so it satisfies the assignment threshold (above $50$ before epoch $100$). Smaller $\alpha$ or $\gamma$ reduced peak performance in these runs (best scores $46$ and $33$ respectively). Increasing $\epsilon_0$ to $0.5$ produced the highest peak score ($86$ at epoch $83$), suggesting more early exploration helped find better policies for this environment draw, though scores remain noisy from run to run. I still report the baseline hyperparameters as my main configuration because they meet the requirement with simpler exploration.
+
 \end{solution}
 
 \newpage
@@ -454,7 +583,96 @@ Under this acceptance rule, the sequence of tokens output by speculative decodin
 \newpage
 
 \begin{solution}
-	Your solution here.
+
+\textbf{Part 1: Decoding}
+
+\textbf{1a.} Greedy decoding selects the highest probability token at each step:
+\begin{itemize}
+  \item $x_1 = A$ since $p(A) = 0.6 > 0.4 = p(B)$.
+  \item $x_2 = A$ since $p(A \mid A) = 0.7 > 0.3$.
+  \item $x_3 = A$ since $p(A \mid A,A) = 0.6 > 0.4$.
+\end{itemize}
+So $\mathbf{x}^{\text{greedy}} = (A,A,A)$ with joint probability $0.6 \times 0.7 \times 0.6 = 0.252$.
+
+\textbf{1b.} These are all 8 sequences:
+
+\begin{center}
+\begin{tabular}{c|c}
+Sequence & $p(\mathbf{x})$ \\ \hline
+$(A,A,A)$ & $0.6 \times 0.7 \times 0.6 = 0.252$ \\
+$(A,A,B)$ & $0.6 \times 0.7 \times 0.4 = 0.168$ \\
+$(A,B,A)$ & $0.6 \times 0.3 \times 0.5 = 0.090$ \\
+$(A,B,B)$ & $0.6 \times 0.3 \times 0.5 = 0.090$ \\
+$(B,A,A)$ & $0.4 \times 0.1 \times 0.5 = 0.020$ \\
+$(B,A,B)$ & $0.4 \times 0.1 \times 0.5 = 0.020$ \\
+$(B,B,A)$ & $0.4 \times 0.9 \times 0.05 = 0.018$ \\
+$(B,B,B)$ & $0.4 \times 0.9 \times 0.95 = \mathbf{0.342}$ \\
+\end{tabular}
+\end{center}
+
+The MAP sequence is $x^{\star} = (B,B,B)$ with probability $0.342$. Greedy decoding fails here because choosing $A$ at step 1 (locally optimal) locks the model into a subtree with lower overall probability than the $(B, B, B)$ path.
+
+\textbf{1c.}
+
+(i) There are $V^k$ possible windows $w = (x_{t-k+1}, \ldots, x_t)$, since each of the $k$ positions takes one of $V$ vocabulary values.
+
+(ii) Let $w' = (x_{t-k+2}, \ldots, x_{t+1})$ be a window of length $k$ ending at position $t+1$. The window $w = (x_{t-k+1}, \ldots, x_t)$ that could precede $w'$ is obtained by prepending one token $x_{t-k+1} \in \{1,\ldots,V\}$ and dropping $x_{t+1}$. Thus, the recursion is:
+\[
+\delta_{t+1}(w') = \max_{x_{t-k+1} \in \{1,\ldots,V\}} \Big[\delta_t(w) \cdot p(x_{t+1} \mid w)\Big]
+\]
+where $w = (x_{t-k+1}, x_{t-k+2}, \ldots, x_t)$ shares its last $k-1$ tokens with $w'$.
+
+(iii) At each time step, for each of the $V^k$ windows $w'$, we search over $V$ possible predecessor tokens. There are $T - k$ steps after initialization. Total runtime is $\mathcal{O}(T \cdot V^{k+1})$.
+\begin{itemize}
+  \item $k=1$: $\mathcal{O}(T \cdot V^2)$, matching the Viterbi bound.
+  \item $k=T-1$: $\mathcal{O}(T \cdot V^T)$, matching brute force.
+\end{itemize}
+
+\bigskip
+\textbf{Part 2: KV Caching}
+
+\textbf{2a.}
+
+(i) Just before generating $x_{T+j}$, the current sequence length is $T + j - 1$, so the forward pass computes $T + j - 1$ key vectors.
+
+(ii) Summing over $j = 1, \ldots, k$:
+\[
+N_{\text{naive}}(T,k) = \sum_{j=1}^{k} (T + j - 1) = kT + \frac{k(k-1)}{2}
+\]
+Since $kT + \frac{k(k-1)}{2} \le (T+k)^2$, we have $N_{\text{naive}}(T,k) = \mathcal{O}((T+k)^2)$.
+
+\textbf{2b.} In causal self-attention, the representation $h_t$ depends only on tokens $x_1, \ldots, x_t$. Appending a new token $x_{T+1}$ does not change $h_t$ for any $t \le T$, so $K_t = W_K h_t$ and $V_t = W_V h_t$ remain valid. Under bidirectional attention, every position attends to every other position, so $h_t$ depends on the entire sequence. Appending a token changes all representations, making cached keys and values stale.
+
+\textbf{2c.}
+
+(i) The prefill computes $T$ keys (one per prefix token). Each of the $k$ generation steps computes 1 new key. Thus:
+\[
+N_{\text{cached}}(T,k) = T + k
+\]
+
+(ii) The ratio is:
+\[
+\frac{N_{\text{naive}}(T,k)}{N_{\text{cached}}(T,k)} = \frac{kT + k(k-1)/2}{T + k}
+\]
+For $k \gg T$, the numerator is $\approx k^2/2$ and the denominator is $\approx k$, so the ratio is $\approx k/2 = \mathcal{O}(k)$. KV caching provides a speedup of a factor of $k$ in this regime.
+
+\textbf{2d.} During training, all target tokens are known in advance (teacher forcing), so the model can compute all keys, queries, and values for all positions in a single parallel forward pass. During generation, each token depends on the sampled value of the previous token, which is unknown before sampling, so generation must be sequential. KV caching does not help during training because all keys are already computed in one pass, there is nothing to cache across steps.
+
+\bigskip
+\textbf{Part 3: Speculative Decoding}
+
+\textbf{3a.}
+
+(i) The target model uses causal attention. A single forward pass over $(x_1, \ldots, x_{T+k})$ produces $p(x_{t+1} \mid x_{\le t})$ for all $t$ simultaneously. This makes parallel verification possible. However, parallel generation is not possible because to sample $x_{T+2}$ we need the realized value of $x_{T+1}$, which depends on a random draw not known until step $T+1$ completes.
+
+(ii) If $q = p$, then $\min(1, p/q) = 1$ for every draft token, so all $k$ drafts are always accepted. However, there is no speedup as we still run $k$ sequential draft steps plus one target verification pass. The total cost is at least as large as generating $k$ tokens from $p$ directly, since $q = p$ means the draft model is just as expensive as the target.
+
+\textbf{3b.}
+
+(i) When $p(x_{T+i} \mid \cdots) \ge q(x_{T+i} \mid \cdots)$, the acceptance probability is $\min(1, p/q) = 1$. This makes sense, as the target model assigns at least as much probability to this token as the draft did, so the draft was conservative and the token should always be kept.
+
+(ii) When $p(x_{T+i} \mid \cdots) \ll q(x_{T+i} \mid \cdots)$, the acceptance probability is $\approx p/q \approx 0$. This makes sense, as the draft model heavily overestimated the probability of this token relative to the target, so the draft is unreliable and should almost always be rejected.
+
 \end{solution}
 
 \newpage
@@ -466,7 +684,11 @@ Under this acceptance rule, the sequence of tokens output by speculative decodin
 \end{problem}
 
 \begin{solution}
-	Your solution here.
+
+A social media platform's recommendation system can be modeled as an RL agent whose state is the user's browsing context and whose actions are which posts to surface. If the reward function is defined in terms of engagement metrics (clicks, watch time, shares, comments), then the agent learns a policy that maximizes these signals. Content that provokes strong emotional reactions (outrage, moral indignation, fear) tends to generate disproportionately high engagement, so the learned policy systematically favors emotionally charged and politically extreme content over moderate alternatives.
+
+This creates a feedback loop. The agent surfaces polarizing content, the user engages with it (perhaps by sharing or commenting), and the positive reward reinforces the agent's tendency to recommend similar or more extreme content in the future. Over many interactions, the user's feed becomes increasingly one sided and extreme, shifting their perceived political center. Crucially, the reward function never penalizes polarization, it only measures engagement, so the agent has no incentive to diversify viewpoints or moderate tone. The problem is not that the RL algorithm is flawed, but that the reward function is misaligned with broader social welfare. A reward signal that accurately captured user wellbeing rather than raw engagement would produce a very different policy, but such a signal is harder to define and measure.
+
 \end{solution}
 
 \newpage
@@ -475,6 +697,8 @@ Under this acceptance rule, the sequence of tokens output by speculative decodin
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
 \subsection*{Name}
+Mert Iravul
+
 \subsection*{Collaborators and Resources}
 Whom did you work with, and did you use any resources beyond cs181-textbook and your notes?
 
